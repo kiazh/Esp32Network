@@ -33,7 +33,13 @@
 #include "link_model.h"
 #include "ssd1306.h"
 
-#define SIM_MODE  0    /* 1 = generate synthetic packets instead of NRF24 */
+/* Set via: idf.py menuconfig → NRF24 Link Monitor → Simulation mode
+ * Or:       idf.py -DCONFIG_NRF24_SIM_MODE=y build              */
+#ifdef CONFIG_NRF24_SIM_MODE
+#  define SIM_MODE 1
+#else
+#  define SIM_MODE 0
+#endif
 
 typedef enum { MODE_INFER = 0, MODE_COLLECT = 1 } app_mode_t;
 

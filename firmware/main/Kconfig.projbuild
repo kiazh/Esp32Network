@@ -1,0 +1,11 @@
+menu "NRF24 Link Monitor"
+
+    config NRF24_SIM_MODE
+        bool "Simulation mode (no NRF24 transmitter needed)"
+        default n
+        help
+            When enabled, the firmware generates synthetic packets internally
+            instead of reading from the NRF24L01. Cycles NORMAL → WEAK →
+            INTERFERENCE every 20 s. No transmitter hardware required.
+
+endmenu

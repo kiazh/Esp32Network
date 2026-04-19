@@ -75,15 +75,43 @@ nrf24-link-monitor/
 
 ---
 
-## Quickstart (no hardware)
+## Running Modes
 
-Run the full simulation — trains the model, simulates packet streams, and shows
-a live dashboard — all in Python, no ESP32 required:
+There are **three ways** to run this project depending on what hardware you have:
+
+| Mode | Hardware needed | How to run |
+|------|----------------|------------|
+| **Python simulation** | None | `python3 tools/simulate.py` |
+| **Firmware simulation** | ESP32 only (no NRF24 TX) | `idf.py -DCONFIG_NRF24_SIM_MODE=y build flash monitor` |
+| **Real hardware** | ESP32 + NRF24L01 + transmitter | `idf.py build flash monitor` |
+
+### Python simulation (no ESP32 needed)
+
+Trains the model and shows a live terminal dashboard — no hardware at all:
 
 ```bash
 pip install numpy scikit-learn
 python3 tools/simulate.py
 ```
+
+### Firmware simulation (ESP32 only, no NRF24 transmitter)
+
+Flash the ESP32 with built-in synthetic packet generation via menuconfig:
+
+```bash
+cd firmware
+idf.py menuconfig   # → NRF24 Link Monitor → enable "Simulation mode"
+idf.py -p /dev/cu.usbserial-110 build flash monitor
+```
+
+Or pass the flag directly without entering menuconfig:
+
+```bash
+cd firmware
+idf.py -DCONFIG_NRF24_SIM_MODE=y -p /dev/cu.usbserial-110 build flash monitor
+```
+
+The firmware cycles NORMAL → WEAK → INTERFERENCE every 20 s automatically.
 
 ---
 
@@ -118,17 +146,18 @@ idf.py -p /dev/cu.usbserial-110 flash monitor
 idf.py -p /dev/ttyUSB0 flash monitor
 ```
 
-### 3. Test with simulation mode (no transmitter needed)
+### 3. Test with firmware simulation mode (no transmitter needed)
 
-In `firmware/main/main.c`, change line:
-```c
-#define SIM_MODE  0
+```bash
+cd firmware
+idf.py -DCONFIG_NRF24_SIM_MODE=y -p /dev/cu.usbserial-110 build flash monitor
 ```
-to:
-```c
-#define SIM_MODE  1
+
+Or use menuconfig to toggle it permanently:
+```bash
+idf.py menuconfig   # → NRF24 Link Monitor → Simulation mode → enable
+idf.py -p /dev/cu.usbserial-110 build flash monitor
 ```
-Then rebuild and flash. The firmware generates synthetic packets internally.
 
 ### 4. Collect real training data
 
