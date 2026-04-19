@@ -1,0 +1,18 @@
+# ESP-IDF build artefacts
+firmware/build/
+firmware/sdkconfig
+firmware/dependencies.lock
+firmware/managed_components/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Collected data (optional — remove this line if you want to commit datasets)
+data/*.csv
+
+# macOS
+.DS_Store
