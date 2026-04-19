@@ -11,8 +11,9 @@ __pycache__/
 .venv/
 venv/
 
-# Collected data (optional — remove this line if you want to commit datasets)
-data/*.csv
+# Collected data from real hardware — not committed (can be large)
+data/nrf24_link_data.csv
+# synthetic_link_data.csv IS committed — lets anyone run train.py offline
 
 # macOS
 .DS_Store
