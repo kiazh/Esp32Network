@@ -10,10 +10,13 @@ Usage
   pip install pyserial
 
   # Basic — auto-detect port, append to default output file:
-  python3 tools/nrf24_collect.py
+  python3 tools/collect.py
 
-  # Specify port and output:
-  python3 tools/nrf24_collect.py --port /dev/ttyUSB0 --out data/my_run.csv
+  # Specify port and output (macOS):
+  python3 tools/collect.py --port /dev/cu.usbserial-110 --out data/my_run.csv
+
+  # Specify port and output (Linux):
+  python3 tools/collect.py --port /dev/ttyUSB0 --out data/my_run.csv
 
 Labelling workflow
 ------------------
@@ -77,7 +80,9 @@ def main() -> None:
 
     port = args.port or find_esp32_port()
     if not port:
-        sys.exit("ERROR: no serial port found.  Use --port /dev/ttyUSBx")
+        sys.exit("ERROR: no serial port found.\n"
+                 "  macOS: --port /dev/cu.usbserial-110  (or /dev/cu.SLAB_USBtoUART)\n"
+                 "  Linux: --port /dev/ttyUSB0")
 
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)

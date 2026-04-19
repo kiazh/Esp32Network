@@ -100,8 +100,21 @@ This project requires **ESP-IDF v5.x or v6.x**.
 
 ### 2. Build and flash
 
+Find your port first:
+```bash
+# macOS
+ls /dev/cu.usbserial-* /dev/cu.SLAB_USBtoUART 2>/dev/null
+
+# Linux
+ls /dev/ttyUSB*
+```
+
+Then flash:
 ```bash
 cd firmware
+# macOS example:
+idf.py -p /dev/cu.usbserial-110 flash monitor
+# Linux example:
 idf.py -p /dev/ttyUSB0 flash monitor
 ```
 
@@ -124,6 +137,9 @@ on channel 76 with a fixed 8-byte payload and a sequence number in byte 0.
 
 ```bash
 pip install pyserial
+# macOS:
+python3 tools/collect.py --port /dev/cu.usbserial-110
+# Linux:
 python3 tools/collect.py --port /dev/ttyUSB0
 ```
 
