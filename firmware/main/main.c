@@ -165,7 +165,7 @@ void app_main(void)
 #if SIM_MODE
     printf("[INFO] SIM_MODE enabled — generating synthetic packets\n");
     feat_init();
-    xTaskCreatePinnedToCore(sim_rx_task, "sim_rx", 3072, NULL, 5, NULL, 1);
+    xTaskCreatePinnedToCore(sim_rx_task, "sim_rx", 4096, NULL, 5, NULL, 1);
 #else
     if (nrf24_init_rx() != ESP_OK) {
         printf("[ERROR] NRF24 init failed — check wiring (CE=GPIO4 CSN=GPIO5)\n");
@@ -174,10 +174,10 @@ void app_main(void)
     printf("[INFO] NRF24 ready — ch=%d payload=%d bytes\n",
            NRF24_CHANNEL, NRF24_PAYLOAD_LEN);
     feat_init();
-    xTaskCreatePinnedToCore(rx_task, "rx", 2048, NULL, 5, NULL, 1);
+    xTaskCreatePinnedToCore(rx_task, "rx", 4096, NULL, 5, NULL, 1);
 #endif
 
-    xTaskCreatePinnedToCore(feat_task, "feat", 4096, NULL, 3, NULL, 0);
+    xTaskCreatePinnedToCore(feat_task, "feat", 8192, NULL, 3, NULL, 0);
 
     /* Serial command interface (UART0 = USB) */
     uart_config_t uart_cfg = {
