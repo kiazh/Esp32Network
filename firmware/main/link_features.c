@@ -32,7 +32,13 @@ void feat_push(uint8_t seq)
     xSemaphoreGive(s_mu);
 }
 
-uint32_t feat_total_pkts(void) { return s_total; }
+uint32_t feat_total_pkts(void)
+{
+    xSemaphoreTake(s_mu, portMAX_DELAY);
+    uint32_t t = s_total;
+    xSemaphoreGive(s_mu);
+    return t;
+}
 
 link_features_t feat_compute(void)
 {

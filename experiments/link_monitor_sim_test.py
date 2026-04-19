@@ -48,7 +48,11 @@ INFER_RE = re.compile(
 
 
 def find_cp210x_port() -> str | None:
-    for tty in sorted(glob.glob("/dev/ttyUSB*") + glob.glob("/dev/cu.SLAB_USBtoUART*")):
+    # macOS: CP210x always appears as cu.SLAB_USBtoUART
+    for tty in sorted(glob.glob("/dev/cu.SLAB_USBtoUART*")):
+        return tty
+    # Linux: verify VID 10c4 (Silicon Labs) via sysfs
+    for tty in sorted(glob.glob("/dev/ttyUSB*")):
         base = os.path.basename(tty)
         cur  = os.path.realpath(f"/sys/class/tty/{base}/device")
         for _ in range(7):
@@ -61,6 +65,7 @@ def find_cp210x_port() -> str | None:
                     pass
                 break
             cur = os.path.dirname(cur)
+    # macOS fallback for other USB-serial adapters
     for tty in sorted(glob.glob("/dev/cu.usbserial*")):
         return tty
     return None

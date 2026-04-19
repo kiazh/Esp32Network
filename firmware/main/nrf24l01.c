@@ -43,7 +43,9 @@ static void spi_xfer(const uint8_t *tx, uint8_t *rx, int len)
         .tx_buffer = tx,
         .rx_buffer = rx,
     };
-    spi_device_transmit(s_spi, &t);
+    esp_err_t err = spi_device_transmit(s_spi, &t);
+    if (err != ESP_OK)
+        ESP_LOGE("nrf24", "spi_device_transmit failed: %s", esp_err_to_name(err));
 }
 
 static uint8_t read_reg(uint8_t reg)
@@ -62,6 +64,8 @@ static void write_reg(uint8_t reg, uint8_t val)
 
 static void write_reg_buf(uint8_t reg, const uint8_t *buf, int len)
 {
+    /* max NRF24 multi-byte register is 5 bytes (address) */
+    if (len < 1 || len > 5) return;
     uint8_t tx[6];
     tx[0] = CMD_W(reg);
     memcpy(&tx[1], buf, len);
