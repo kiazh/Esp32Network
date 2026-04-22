@@ -11,7 +11,7 @@ and runs a lightweight decision tree to classify the link into one of three stat
 | **WEAK** | High packet loss or long delays |
 | **INTERFERENCE** | Bursty / irregular arrival pattern |
 
-> This project was built using [AEL (AI Embedded Lab)](https://github.com/kiazh/ai-embedded-lab)
+> This project was built using [AEL (AI Embedded Lab)](https://github.com/EZ32Inc/ai-embedded-lab)
 > with Claude Code driving the ESP-IDF build/flash/verify loop. See [DEVELOPMENT.md](DEVELOPMENT.md)
 > for a walkthrough of how the AI iterated on the firmware.
 
