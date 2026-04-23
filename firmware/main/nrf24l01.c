@@ -17,6 +17,7 @@
 #define REG_RX_ADDR_P0  0x0A
 #define REG_TX_ADDR     0x10
 #define REG_RX_PW_P0    0x11
+#define REG_FIFO_STATUS 0x17
 
 /* ── SPI commands ──────────────────────────────────────────────────────────── */
 #define CMD_R(r)        (0x00 | (r))
@@ -113,7 +114,7 @@ esp_err_t nrf24_init_rx(void)
     vTaskDelay(pdMS_TO_TICKS(5));  /* power-on settling ≥ 1.5 ms */
 
     /* Configure as receiver */
-    write_reg(REG_CONFIG,    0x0F);  /* PWR_UP=1 PRIM_RX=1 EN_CRC=1 CRCO=1bit */
+    write_reg(REG_CONFIG,    0x0F);  /* PWR_UP=1 PRIM_RX=1 EN_CRC=1 CRCO=2byte CRC */
     write_reg(REG_EN_AA,     0x01);  /* auto-ACK on pipe 0 */
     write_reg(REG_EN_RXADDR, 0x01);  /* enable pipe 0 */
     write_reg(REG_SETUP_AW,  0x03);  /* 5-byte address */
@@ -160,4 +161,9 @@ void nrf24_flush_rx(void)
 {
     uint8_t cmd = CMD_FLUSH_RX;
     spi_xfer(&cmd, NULL, 1);
+}
+
+bool nrf24_fifo_empty(void)
+{
+    return (read_reg(REG_FIFO_STATUS) & 0x01) != 0;
 }

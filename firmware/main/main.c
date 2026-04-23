@@ -100,8 +100,11 @@ static void rx_task(void *arg)
     uint8_t pkt[NRF24_PAYLOAD_LEN];
     for (;;) {
         if (nrf24_packet_available()) {
-            nrf24_read_payload(pkt);
-            feat_push(pkt[0]);          /* byte[0] is the sequence number */
+            /* Drain all packets from the 3-deep RX FIFO */
+            for (int i = 0; i < 3 && !nrf24_fifo_empty(); i++) {
+                nrf24_read_payload(pkt);
+                feat_push(pkt[0]);      /* byte[0] is the sequence number */
+            }
         }
         vTaskDelay(pdMS_TO_TICKS(1));   /* poll at ~1 kHz */
     }

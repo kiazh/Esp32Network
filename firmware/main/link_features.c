@@ -51,12 +51,12 @@ link_features_t feat_compute(void)
     int oldest = (count < FEAT_WINDOW_SIZE) ? 0 : s_head;
     for (int i = 0; i < count; i++)
         snap[i] = s_buf[(oldest + i) % FEAT_WINDOW_SIZE];
+    int64_t now    = esp_timer_get_time();
     xSemaphoreGive(s_mu);
 
     if (count < 2) return f;
 
     /* Find first packet inside the 2-second window. */
-    int64_t now    = esp_timer_get_time();
     int64_t cutoff = now - (int64_t)FEAT_WINDOW_MS * 1000;
     int wi = count;   /* sentinel: no packet found in window */
     for (int i = 0; i < count; i++) {
@@ -86,12 +86,21 @@ link_features_t feat_compute(void)
         for (int i = 0; i < ni; i++) sum2 += (iats[i] - mean) * (iats[i] - mean);
         float stddev = sqrtf(sum2 / ni);
         f.avg_iat_ms  = mean;
+        /* When ni == 1, stddev is 0 so burst_score = 0.0.  This is
+           intentional: CoV (σ/μ) is undefined for a single sample, and
+           0.0 is a safe default — it won't trigger a false INTERFERENCE
+           classification, which requires burst_score > 1.0755. */
         f.burst_score = (mean > 1.0f) ? (stddev / mean) : 0.0f;
         if (f.burst_score > 3.0f) f.burst_score = 3.0f;
     }
 
     /* loss_rate: seq gaps within window */
     int seq_span  = ((int)snap[count-1].seq - (int)snap[wi].seq + 256) % 256 + 1;
+    /* Full 256-wrap: when last seq == first seq but multiple packets exist,
+       the modular difference is 0 → seq_span incorrectly becomes 1.
+       Correct it to 256 (the true span of a full wrap). */
+    if (snap[count-1].seq == snap[wi].seq && n > 1)
+        seq_span = 256;
     if (seq_span > n) {
         f.loss_rate = (float)(seq_span - n) / (float)seq_span;
         if (f.loss_rate > 1.0f) f.loss_rate = 1.0f;

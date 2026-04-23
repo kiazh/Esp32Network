@@ -36,3 +36,6 @@ void      nrf24_read_payload(uint8_t *buf);
 
 /* Flush the RX FIFO. */
 void      nrf24_flush_rx(void);
+
+/* Returns true when the RX FIFO is empty (FIFO_STATUS bit 0). */
+bool      nrf24_fifo_empty(void);

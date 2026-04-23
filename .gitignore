@@ -15,5 +15,8 @@ venv/
 data/nrf24_link_data.csv
 # synthetic_link_data.csv IS committed — lets anyone run train.py offline
 
+# Kiro spec artefacts
+.kiro/
+
 # macOS
 .DS_Store
