@@ -94,6 +94,7 @@ nrf24-link-monitor/
 ├── firmware/               ESP-IDF project (ESP32 target)
 │   ├── CMakeLists.txt
 │   ├── sdkconfig.defaults
+│   ├── sdkconfig.sim.defaults  SIM_MODE config override
 │   ├── partitions.csv
 │   ├── components/
 │   │   └── board/          Minimal board init (NVS flash)
@@ -107,6 +108,8 @@ nrf24-link-monitor/
 ├── training/
 │   ├── train.py            Train model → writes firmware/main/link_model.h
 │   └── requirements.txt
+├── experiments/
+│   └── link_monitor_sim_test.py  Offline simulation test script
 ├── tools/
 │   ├── collect.py          Serial CSV harvester for data collection
 │   ├── simulate.py         Full pipeline simulation (no hardware needed)
