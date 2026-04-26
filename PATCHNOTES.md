@@ -1,5 +1,26 @@
 # Patch Notes
 
+## v1.1.1 — SIM_MODE sdkconfig fix (2026-04-26)
+
+### Bug Fixes
+
+**`CONFIG_NRF24_SIM_MODE` not applied when `firmware/sdkconfig` present** — `firmware/sdkconfig`
+`experiments/link_monitor_sim_test.py` passes `SDKCONFIG_DEFAULTS` to CMake to enable
+SIM_MODE at build time. IDF ignores `SDKCONFIG_DEFAULTS` for values already present in
+an existing `sdkconfig` file. Because `firmware/sdkconfig` was committed with
+`# CONFIG_NRF24_SIM_MODE is not set`, the sim firmware was never actually built in SIM
+mode — `sim_rx_task` was compiled out, `feat_push()` was never called, and the feature
+extractor reported 0 packets per window, causing the model to output WEAK for all 75
+inference samples regardless of phase.
+
+Fixed by setting `CONFIG_NRF24_SIM_MODE=y` directly in `firmware/sdkconfig`.
+
+### Files Changed
+
+- `firmware/sdkconfig` — `CONFIG_NRF24_SIM_MODE` enabled (line 722)
+
+---
+
 ## v1.1.0 — Bugfix Release
 
 ### Bug Fixes

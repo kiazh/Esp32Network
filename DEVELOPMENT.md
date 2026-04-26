@@ -95,3 +95,89 @@ These findings were saved back to the CE so future projects benefit:
 - Kconfig `.projbuild` pattern for per-project build-time feature flags
 - `textwrap.dedent` is unsafe for C code templates — use f-strings instead
 - `esp_random()` requires explicit `esp_hw_support` in CMakeLists REQUIRES
+
+---
+
+## AEL Session — 2026-04-26: First Hardware Validation Run (No NRF24, No OLED)
+
+**Goal:** Run `experiments/link_monitor_sim_test.py` on ESP32-WROOM-32U using AEL
+toolchain. Hardware available: ESP32-WROOM-32U only — no NRF24L01 transmitter, no
+SSD1306 OLED.
+
+**Tool:** AEL CLI (`python -m ael`) confirmed system healthy before run.
+Board `esp32_wroom32d_cp210x` present in golden assets, verified. Port detected:
+`/dev/cu.usbserial-0001`.
+
+### What Was Run
+
+`experiments/link_monitor_sim_test.py` — the existing AEL experiment script that:
+1. Builds firmware with `CONFIG_NRF24_SIM_MODE=y` using a separate build dir (`build_sim`)
+2. Flashes to board at 460800 baud
+3. Captures 75 s of UART inference output
+4. Asserts all three link states (NORMAL / WEAK / INTERF) appear ≥2 times each
+
+OLED absence is already handled gracefully in firmware (`ssd1306_init()` failure is
+non-fatal; falls through to serial-only mode with `[WARN] SSD1306 not found` log line).
+
+### Issues Encountered
+
+**Issue 1 — Project venv vs IDF Python conflict**
+
+Running `source .venv/bin/activate` before `source export.sh` activated the project's
+Python environment (which lacks `click`). When `experiments/link_monitor_sim_test.py`
+then called `idf.py` as a subprocess, it failed with `No module named 'click'`.
+
+Fix: use IDF's own Python environment (`/Users/shadow/.espressif/python_env/...`)
+directly — source `export.sh` without activating the project venv. Install `pyserial`
+into the IDF Python env (`pip install pyserial`).
+
+**Issue 2 — `SDKCONFIG_DEFAULTS` ignored when `firmware/sdkconfig` already exists**
+
+The experiment script passes `SDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.sim.defaults`
+to CMake via `-D`. This is only applied when generating a *fresh* sdkconfig. Because
+`firmware/sdkconfig` already existed (committed to the repo) with
+`# CONFIG_NRF24_SIM_MODE is not set`, IDF used it as-is and ignored the sim defaults.
+
+The firmware built without `CONFIG_NRF24_SIM_MODE`, so `sim_rx_task` was never
+compiled in. The real `rx_task` ran instead but found no NRF24 hardware, so
+`feat_push()` was never called. The feature extractor reported 0 packets per window
+every cycle → model classified everything as WEAK. This manifested as
+`total=0, rate=0.0, state=WEAK` across all 75 inference samples.
+
+Fix: enable `CONFIG_NRF24_SIM_MODE=y` directly in `firmware/sdkconfig` (line 722).
+Delete stale `build_sim/` directory. Rebuild from scratch — new `build_sim/sdkconfig`
+correctly inherits `CONFIG_NRF24_SIM_MODE=y`.
+
+### Result
+
+```
+OVERALL: PASS
+
+NORMAL:  38 samples  [OK]   — rate ~10.5 p/s, IAT ~94ms, loss 0%
+WEAK:    24 samples  [OK]   — rate 1-3 p/s, loss 33-60%, IAT 340-1500ms
+INTERF:  13 samples  [OK]   — burst_score >1.1, mixed IAT
+Total packets: 510 over 75 s
+```
+
+### Civilization Engine Audit
+
+CE queries attempted at session end (retroactive — Rules 1 and 7 were not followed
+at session start):
+
+- Queries: `HIGH_PRIORITY`, `brownfield`, `esp32_wroom32d_cp210x`, `baud`
+- Result: CE backend unavailable on this machine
+  (`/nvme1t/work/codex/experience_engine` path not present).
+  `CivilizationEngine.is_available()` returned `False`. All queries returned empty.
+- Patterns that would have been relevant (from CLAUDE.md asset table):
+  - `92fd939d` — ESP32JTAG Firmware Brownfield Onboarding Pattern (external IDF project)
+  - `da6927bd` — observe_uart baud=null → int(None) TypeError (USB CDC)
+  - `HARDWARE_CONNECT_FIRST_RULE` `04486a33` — confirm hardware connected before probing
+
+### Lessons for Future Sessions
+
+- When `firmware/sdkconfig` is committed to the repo, `SDKCONFIG_DEFAULTS` in CMake
+  has no effect on values already present. Either: (a) enable the flag directly in
+  `sdkconfig`, (b) delete `sdkconfig` and let IDF regenerate from defaults, or
+  (c) use a separate `SDKCONFIG` path pointing to a build-dir-only file.
+- Always use IDF's Python env for AEL experiment scripts that call `idf.py` as a
+  subprocess. Project venvs conflict with IDF's `click`-based CLI.
