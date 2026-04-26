@@ -1,6 +1,0 @@
--Wno-frame-address
--mlongcalls
--fno-builtin-memcpy
--fno-builtin-memset
--fno-builtin-bzero
-"-specs=/Users/shadow/esp/ai-embedded-lab/projects/esp32_sec_toolkit/nrf24-link-monitor/build_sim/specs/picolibc.specs"
