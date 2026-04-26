@@ -1,5 +1,7 @@
 # ESP-IDF build artefacts
 firmware/build/
+build_sim/
+build_*/
 firmware/sdkconfig
 firmware/dependencies.lock
 firmware/managed_components/
